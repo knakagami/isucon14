@@ -17,27 +17,54 @@ ISUCON14（ISURIDE）に OpenTelemetry Native 計装と Splunk DB Monitoring を
 | MCP `user-splunk_o11y_free` (jp0) | 接続確認済み |
 | GitHub fork | [knakagami/isucon14](https://github.com/knakagami/isucon14) |
 | ローカル clone | 本ワークスペース |
-| Linux EC2 `dev-1` | **未作成** — AWS アカウント SCP により `ec2:RunInstances` が拒否（要別アカウント or 承認） |
+| Linux EC2 `dev-1` | **保留** — SCP で `ec2:RunInstances` 拒否。代わりに **WSL2 Ubuntu** を開発端末に使用 |
+
+## インフラ（Terraform）
+
+[splunk-on-eks](https://github.com/knakagami/splunk-on-eks) と同様に、**Terraform で EC2 を起動**し、Ansible で ISUCON + Splunk 設定を流し込みます。
+
+詳細: [`terraform/README.md`](terraform/README.md)
+
+```bash
+# WSL
+aws sso login --profile SPLKAdministratorAccess-124593756704
+bash scripts/02-deploy-infra.sh
+bash scripts/03-generate-ansible-inventory.sh
+```
+
+| インスタンス | 役割 |
+|-------------|------|
+| app-1〜3 | nginx + isuride Go |
+| db-1 | MySQL + DB Monitoring Collector |
+| bench-1 | ベンチマーカー |
 
 ## 開発環境
 
-### 推奨: Linux EC2 `dev-1`
+### 推奨: WSL2 Ubuntu + AWS SSO
 
-- Ubuntu 24.04, Docker, Go 1.23, Task, Ansible
-- bootstrap スクリプト: [`splunk/scripts/dev-1-user-data.sh`](splunk/scripts/dev-1-user-data.sh)
-- Cursor 接続: SSH Remote または Cloud Agent（`move_agent_to_root`）
+Corp AWS では新規 EC2 起動が SCP で拒否されるため、**WSL2 を開発端末**とする。
 
-### AWS 認証
+```bash
+# WSL からリポジトリへ
+cd "/mnt/c/Users/knakagam/OneDrive - Cisco/isucon-with-splunk-o11y"
 
-```powershell
+# AWS（WSL 内で SSO ログイン）
 aws sso login --profile SPLKAdministratorAccess-124593756704
 aws --profile SPLKAdministratorAccess-124593756704 sts get-caller-identity
 ```
 
-### Splunk O11y
+| ツール | WSL 状態 | Phase 1 前の作業 |
+|--------|---------|-----------------|
+| Docker | 済 | — |
+| AWS CLI + SSO プロファイル | 済 | 必要時 `aws sso login` |
+| Go | 1.22.2 | **1.23 に更新** |
+| Task | 未 | **インストール** |
 
-- Realm: `jp0`
-- Ingest token は `.env` に置く（リポジトリにコミットしない）
+Cursor（Windows）で編集、WSL で `task` / `docker` / `aws` を実行するハイブリッド構成。
+
+### Splunk O11y（MCP / jp0）
+
+Cursor MCP `user-splunk_o11y_free` で操作。UI: https://app.jp0.observability.splunkcloud.com
 
 ```bash
 # 例
