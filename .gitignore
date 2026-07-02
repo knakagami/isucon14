@@ -1,2 +1,24 @@
-_tmp
-webapp/public
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+**/secrets/
+
+# Splunk tokens
+splunk-token*
+*access-token*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Go / build artifacts (local)
+webapp/go/isuride
+webapp/go/isuride.exe
+
+# Ansible vault
+*.vault
+vault-pass.txt
